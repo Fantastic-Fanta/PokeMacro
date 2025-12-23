@@ -1,6 +1,6 @@
 # Pokemon Macro - Automated Shiny/Gradient Hunter
 
-An automated OCR-powered macro for Pokemon games on Roblox that helps you hunt for Shiny and Gradient Pokemon by automatically rejoining the game and monitoring chat notifications.
+An automated OCR-powered macro for PBB  (Alpha Modded) on Roblox that automates the process of soft resetting Shiny and Gradients by rejoining the game and monitoring chat notifications.
 
 ## Overview
 
