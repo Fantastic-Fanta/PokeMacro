@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pokemon-macro"
+version = "0.1.0"
+description = "MacOS OCR powered macro for Pokemon Brick Bronze for Shiny/Gradient hunting"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Manta" }]
+dependencies = [
+    "pyautogui",
+    "pytesseract",
+    "mss",
+    "numpy",
+    "Pillow",
+]
+
+[project.scripts]
+pokemon-macro = "pokemon_macro.main:main"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+
