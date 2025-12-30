@@ -1,6 +1,6 @@
 # Pokemon Macro - Automated Shiny/Gradient Hunter
 
-An automated OCR-powered macro for Alpha Modded that helps you hunt for Shiny, Gradient, and Reskin Pokemon by automatically soft resetting eggs.
+An automated OCR-powered macro for Alpha Modded (PBB on Roblox) that helps you hunt for Shiny, Gradient, and Reskin Pokemon by automatically soft resetting eggs and monitoring chat notifications.
 
 ## Overview
 
