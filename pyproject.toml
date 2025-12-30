@@ -16,6 +16,7 @@ dependencies = [
     "mss",
     "numpy",
     "Pillow",
+    "PyYAML",
 ]
 
 [project.scripts]
@@ -26,5 +27,6 @@ package-dir = { "" = "src" }
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
 
 

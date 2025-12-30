@@ -9,8 +9,7 @@ import pyautogui
 
 @dataclass
 class PixelColorService:
-    tolerance: int = 5
-
+    tolerance: int = 5 # Edit this if necessary; this is incase of your UI colors being imperfect or effected by lighting
     def get_pixel_color(self, x: int, y: int) -> Tuple[int, int, int]:
         with mss.mss() as sct:
             monitor = {"top": y, "left": x, "width": 1, "height": 1}
@@ -34,13 +33,17 @@ class PixelColorService:
     ) -> bool:
         start_time = time.time()
         target_r, target_g, target_b = target_color
-        within_tol = lambda c, t: abs(c - t) <= self.tolerance
+
+        def within_tolerance(current: int, target: int) -> bool:
+            return abs(current - target) <= self.tolerance
 
         while time.time() - start_time < timeout:
             current_r, current_g, current_b = self.get_pixel_color(x, y)
-            if within_tol(current_r, target_r) and within_tol(
-                current_g, target_g
-            ) and within_tol(current_b, target_b):
+            if (
+                within_tolerance(current_r, target_r)
+                and within_tolerance(current_g, target_g)
+                and within_tolerance(current_b, target_b)
+            ):
                 return True
 
             time.sleep(check_interval)

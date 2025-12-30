@@ -1,5 +1,3 @@
 
-#Please make sure to grant Accessibility perms for macroing... 😂
-
-
+__version__ = "0.1.2"
 

@@ -1,31 +1,37 @@
 import time
-from typing import Any, Dict, Sequence, Tuple
-
-import pyautogui
+from typing import Any, Dict, Optional, Sequence, Tuple
 
 from .macro_config import ClickConfig
 from .pixel_utils import PixelColorService
+from .platform_clicker import PlatformClicker
 
 
 class ClickExecutor:
-    def __init__(self, pixel_service: PixelColorService | None = None) -> None:
+    def __init__(
+        self, 
+        pixel_service: Optional[PixelColorService] = None,
+        clicker: Optional[PlatformClicker] = None
+    ) -> None:
         self._pixel_service = pixel_service or PixelColorService()
+        self._clicker = clicker or PlatformClicker()
 
     def _parse_click_config(
         self, click_config: ClickConfig
-    ) -> Tuple[int, int, float, Dict[str, Any] | None]:
+    ) -> Tuple[int, int, float, Optional[Dict[str, Any]], str]:
         if isinstance(click_config, dict):
             x, y = click_config["position"]
             sleep_time = float(click_config.get("sleep", 0))
             pixel_check = click_config.get("wait_for_pixel", None)
-            return x, y, sleep_time, pixel_check
+            button = click_config.get("button", "left").lower()
+            return x, y, sleep_time, pixel_check, button
+        
         if isinstance(click_config, tuple):
             if len(click_config) == 2:
                 x, y = click_config
-                return int(x), int(y), 0.0, None
+                return int(x), int(y), 0.0, None, "left"
             if len(click_config) == 3:
                 x, y, sleep_time = click_config
-                return int(x), int(y), float(sleep_time), None
+                return int(x), int(y), float(sleep_time), None, "left"
             if len(click_config) == 9:
                 (
                     x,
@@ -43,15 +49,18 @@ class ClickExecutor:
                     "color": (int(px_r), int(px_g), int(px_b)),
                     "timeout": float(px_timeout),
                 }
-                return int(x), int(y), float(sleep_time), pixel_check
+                return int(x), int(y), float(sleep_time), pixel_check, "left"
 
         raise ValueError(click_config)
 
     def execute_mouse_clicks(self, click_sequence: Sequence[ClickConfig]) -> None:
-        for i, click_config in enumerate(click_sequence, start=1):
+        for click_config in click_sequence:
             try:
-                x, y, sleep_time, pixel_check = self._parse_click_config(click_config)
-            except ValueError:
+                x, y, sleep_time, pixel_check, button = self._parse_click_config(
+                    click_config
+                )
+            except ValueError as e:
+                print(e)
                 continue
             if pixel_check:
                 pixel_pos = pixel_check["position"]
@@ -60,9 +69,13 @@ class ClickExecutor:
                 if not self._pixel_service.wait_for_pixel_color(
                     pixel_pos[0], pixel_pos[1], pixel_color, pixel_timeout
                 ):
-                    print("Timed out")
+                    print(pixel_pos, pixel_color)
 
-            pyautogui.click(x, y)
+            if button == "right":
+                self._clicker.right_click(x, y)
+            else:
+                self._clicker.click(x, y)
+            
             if sleep_time > 0:
                 time.sleep(sleep_time)
 

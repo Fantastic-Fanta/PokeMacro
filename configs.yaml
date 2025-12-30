@@ -1,0 +1,45 @@
+# Your username (display name)
+Username : "Manta"
+
+# PokeMacro Configs
+Wishlist:
+  Reskins:
+    - "Whiteout"
+    - "Phantom"
+    - "Glitch"
+  Gradients:
+    - "Gaia"
+    - "Chronos"
+    - "Peppermint"
+    - "Nativity"
+    - "Helios"
+    - "Eos"
+    - "Aether"
+    - "Nereus"
+    - "Nyx"
+    - "Frostbite"
+    - "Winter"
+
+# Positions to change
+Positions:
+  EggManPosition: [675, 739] # Make sure this is correct every time, may be different
+  EventButton: [1418, 965]
+  DialogueYES: [1170, 405]
+  QuickRejoinSprite: [1475,850]
+  QuickRejoinButton: [1000,580] # The confirmation button when you click the sprite
+  MenuButton: [43,451] # Menu tab on the left, make sure to pick a position in the text that is WHITE
+  SaveButton: [70,735] 
+
+
+
+# Chat Window (for ocr region)
+ChatWindow:
+  LeftCorner: [13, 136]
+  RightCorner: [440, 354]
+
+# Matching
+IsReskin: false
+IsShiny: false
+IsGradient: false
+IsAny: false
+IsGood: false
