@@ -1,19 +1,15 @@
 import time
 from typing import Any, Dict, Optional, Sequence, Tuple
 
+import pyautogui
+
 from .macro_config import ClickConfig
 from .pixel_utils import PixelColorService
-from .platform_clicker import PlatformClicker
 
 
 class ClickExecutor:
-    def __init__(
-        self, 
-        pixel_service: Optional[PixelColorService] = None,
-        clicker: Optional[PlatformClicker] = None
-    ) -> None:
+    def __init__(self, pixel_service: Optional[PixelColorService] = None) -> None:
         self._pixel_service = pixel_service or PixelColorService()
-        self._clicker = clicker or PlatformClicker()
 
     def _parse_click_config(
         self, click_config: ClickConfig
@@ -72,9 +68,9 @@ class ClickExecutor:
                     print(pixel_pos, pixel_color)
 
             if button == "right":
-                self._clicker.right_click(x, y)
+                pyautogui.rightClick(x, y)
             else:
-                self._clicker.click(x, y)
+                pyautogui.click(x, y)
             
             if sleep_time > 0:
                 time.sleep(sleep_time)

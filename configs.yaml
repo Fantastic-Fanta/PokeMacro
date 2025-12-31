@@ -22,7 +22,7 @@ Wishlist:
 
 # Positions to change
 Positions:
-  EggManPosition: [675, 739] # Make sure this is correct every time, may be different
+  EggManPosition: [969, 559] # Make sure this is correct every time, may be different
   EventButton: [1418, 965]
   DialogueYES: [1170, 405]
   QuickRejoinSprite: [1475,850]
@@ -38,8 +38,8 @@ ChatWindow:
   RightCorner: [440, 354]
 
 # Matching
-IsReskin: false
+IsReskin: True
 IsShiny: false
-IsGradient: false
-IsAny: false
-IsGood: false
+IsGradient: True
+IsAny: False
+IsGood: False

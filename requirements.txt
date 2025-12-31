@@ -191,4 +191,3 @@ tqdm==4.67.1
 typing_extensions==4.15.0
 urllib3==2.6.2
 PyYAML==6.0.2
-pywinauto==0.6.8

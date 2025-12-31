@@ -2,8 +2,9 @@ import time
 from pathlib import Path
 from typing import Optional
 
+import pyautogui
+
 from .click_executor import ClickExecutor
-from .platform_clicker import PlatformClicker
 from .img_funcs import (
     OcrService,
     ScreenRegion,
@@ -20,11 +21,9 @@ class MacroRunner:
         config: MacroConfig,
         click_executor: Optional[ClickExecutor] = None,
         ocr_service: Optional[OcrService] = None,
-        clicker: Optional[PlatformClicker] = None,
     ) -> None:
         self._config = config
-        self._clicker = clicker or PlatformClicker()
-        self._click_executor = click_executor or ClickExecutor(clicker=self._clicker)
+        self._click_executor = click_executor or ClickExecutor()
         self._ocr_service = ocr_service or OcrService()
         self._screen_region = ScreenRegion(
             x=config.region.x,
@@ -79,21 +78,21 @@ class MacroRunner:
         
         # Click dialogue YES button 3 times to clean off additional yap from eggman
         for _ in range(3):
-            self._clicker.click(*positions.dialogue_yes)
+            pyautogui.click(*positions.dialogue_yes)
             time.sleep(0.2)
         
         # Open menu and save
-        self._clicker.click(*positions.menu_button)
+        pyautogui.click(*positions.menu_button)
         time.sleep(2)
-        self._clicker.click(*positions.save_button)
+        pyautogui.click(*positions.save_button)
         time.sleep(2)
-        self._clicker.click(*positions.dialogue_yes)
+        pyautogui.click(*positions.dialogue_yes)
 
     def _handle_no_match(self) -> None:
         positions = self._config.positions
-        self._clicker.click(*positions.quick_rejoin_sprite)
+        pyautogui.click(*positions.quick_rejoin_sprite)
         time.sleep(0.2)
-        self._clicker.click(*positions.quick_rejoin_button)
+        pyautogui.click(*positions.quick_rejoin_button)
 
     def _log_username_detection(self, text: str) -> None:
         with open(self._log_file_path, "a", encoding="utf-8") as log_file:
