@@ -38,11 +38,11 @@ ChatWindow:
   RightCorner: [440, 354]
 
 # Matching
-IsReskin: True
+IsReskin: False
 IsShiny: False
-IsGradient: True
+IsGradient: False
 IsAny: False
-IsGood: False
+IsGood: True
 
 # Discord Webhook (leave empty to disable if not needed)
 DiscordWebhook: ""
