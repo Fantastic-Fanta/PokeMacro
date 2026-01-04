@@ -7,16 +7,15 @@ import numpy as np
 import pyautogui
 
 
-@dataclass
+@dataclass(frozen=True)
 class PixelColorService:
-    tolerance: int = 5 # Edit this if necessary; this is incase of your UI colors being imperfect or effected by lighting
+    tolerance: int = 5
+    
     def get_pixel_color(self, x: int, y: int) -> Tuple[int, int, int]:
         with mss.mss() as sct:
             monitor = {"top": y, "left": x, "width": 1, "height": 1}
-            screenshot = sct.grab(monitor)
-            img = np.array(screenshot)
-            b, g, r = img[0, 0, 0], img[0, 0, 1], img[0, 0, 2]
-            return int(r), int(g), int(b)
+            img = np.array(sct.grab(monitor))
+            return (int(img[0, 0, 2]), int(img[0, 0, 1]), int(img[0, 0, 0]))
 
     def get_pixel_color_at_mouse(self) -> Tuple[int, int, int, int, int]:
         x, y = pyautogui.position()
@@ -33,19 +32,12 @@ class PixelColorService:
     ) -> bool:
         start_time = time.time()
         target_r, target_g, target_b = target_color
-
-        def within_tolerance(current: int, target: int) -> bool:
-            return abs(current - target) <= self.tolerance
+        within_tolerance = lambda current, target: abs(current - target) <= self.tolerance
+        matches = lambda r, g, b: all([within_tolerance(r, target_r), within_tolerance(g, target_g), within_tolerance(b, target_b)])
 
         while time.time() - start_time < timeout:
-            current_r, current_g, current_b = self.get_pixel_color(x, y)
-            if (
-                within_tolerance(current_r, target_r)
-                and within_tolerance(current_g, target_g)
-                and within_tolerance(current_b, target_b)
-            ):
+            if matches(*self.get_pixel_color(x, y)):
                 return True
-
             time.sleep(check_interval)
 
         return False

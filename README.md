@@ -338,11 +338,12 @@ Pokemon-Macro/
 ├── pyproject.toml            # Package configuration
 ├── src/
 │   └── auto_resetter/
+│       ├── __init__.py
 │       ├── main.py           # Entry point
 │       ├── macro_runner.py   # Main macro logic
 │       ├── macro_config.py   # Configuration loading
 │       ├── click_executor.py # Click sequence execution
-│       ├── platform_clicker.py # Platform-specific clicking
+│       ├── discord_webhook.py # Discord webhook notifications
 │       ├── img_funcs.py      # OCR and image processing
 │       └── pixel_utils.py    # Pixel color detection
 └── README.md

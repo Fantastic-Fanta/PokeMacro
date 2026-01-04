@@ -7,7 +7,7 @@ import pytesseract
 from PIL import Image
 
 
-@dataclass
+@dataclass(frozen=True)
 class ScreenRegion:
     x: int
     y: int
@@ -15,17 +15,13 @@ class ScreenRegion:
     height: int
 
     def capture(self, save_debug: bool = False) -> Image.Image:
-        screenshot = pyautogui.screenshot(
-            region=(self.x, self.y, self.width, self.height)
-        )
+        screenshot = pyautogui.screenshot(region=(self.x, self.y, self.width, self.height))
         if save_debug:
             screenshot.save("screenshot.png")
         return screenshot
 
 
 class OcrService:
-    # Still experimenting if FastOCR may be a better alternative to Tesseract
-
     def extract_text(self, image: Image.Image) -> str:
         try:
             return pytesseract.image_to_string(image).strip()
@@ -34,16 +30,11 @@ class OcrService:
             return "Utterly Pmoed"
 
 
-def remove_chronos_event_phrase(text: str) -> str:
-    pattern = r'\b[Cc]hronos\s+[Ee]vent\s+2025\s+is\s+out\b'
-    result = re.sub(pattern, '', text, flags=re.IGNORECASE)
-    result = re.sub(r'\s+', ' ', result).strip()
-    return result
+remove_chronos_event_phrase = lambda text: re.sub(r'\s+', ' ', re.sub(r'\b[Cc]hronos\s+[Ee]vent\s+2025\s+is\s+out\b', '', text, flags=re.IGNORECASE)).strip()
 
 
 def trim_text_from_username_to_attempts(text: str, username: str) -> str:
-    text_lower = text.lower()
-    username_lower = username.lower()
+    text_lower, username_lower = text.lower(), username.lower()
     
     if username_lower not in text_lower:
         return text
@@ -58,8 +49,7 @@ def trim_text_from_username_to_attempts(text: str, username: str) -> str:
     if attempts_index == -1:
         return text[username_index:]
     
-    end_index = username_index + attempts_index + len("attempts")
-    return text[username_index:end_index]
+    return text[username_index:username_index + attempts_index + len("attempts")]
 
 
 def matches_config(
@@ -73,33 +63,21 @@ def matches_config(
     is_any: bool,
     is_good: bool,
 ) -> bool:
-    text_lower = text.lower()
-    username_lower = username.lower()
+    text_lower, username_lower = text.lower(), username.lower()
     
-    if "attemp" not in text_lower: # Not a mispelling, for tolerance on OCR
-        return False
-    if username_lower not in text_lower:
+    if "attemp" not in text_lower or username_lower not in text_lower:
         return False
     
     has_reskin = any(reskin.lower() in text_lower for reskin in reskins)
     has_gradient = any(gradient.lower() in text_lower for gradient in gradients)
     has_shiny = "shiny" in text_lower
     
-    if is_any:
-        if not (has_reskin or has_gradient):
-            return False
+    checks = [
+        lambda: not is_any or (has_reskin or has_gradient),
+        lambda: not is_reskin or has_reskin,
+        lambda: not is_shiny or has_shiny,
+        lambda: not is_gradient or has_gradient,
+        lambda: not is_good or ((has_reskin and has_gradient) or (has_shiny and has_gradient)),
+    ]
     
-    if is_reskin and not has_reskin:
-        return False
-    
-    if is_shiny and not has_shiny:
-        return False
-    
-    if is_gradient and not has_gradient:
-        return False
-    
-    if is_good:
-        if not ((has_reskin and has_gradient) or (has_shiny and has_gradient)):
-            return False
-    
-    return True
+    return all(check() for check in checks)

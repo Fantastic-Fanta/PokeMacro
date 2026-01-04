@@ -16,61 +16,53 @@ class ClickExecutor:
     ) -> Tuple[int, int, float, Optional[Dict[str, Any]], str]:
         if isinstance(click_config, dict):
             x, y = click_config["position"]
-            sleep_time = float(click_config.get("sleep", 0))
-            pixel_check = click_config.get("wait_for_pixel", None)
-            button = click_config.get("button", "left").lower()
-            return x, y, sleep_time, pixel_check, button
+            return (
+                int(x),
+                int(y),
+                float(click_config.get("sleep", 0)),
+                click_config.get("wait_for_pixel"),
+                click_config.get("button", "left").lower(),
+            )
         
         if isinstance(click_config, tuple):
-            if len(click_config) == 2:
-                x, y = click_config
-                return int(x), int(y), 0.0, None, "left"
-            if len(click_config) == 3:
-                x, y, sleep_time = click_config
-                return int(x), int(y), float(sleep_time), None, "left"
-            if len(click_config) == 9:
-                (
-                    x,
-                    y,
-                    sleep_time,
-                    px_x,
-                    px_y,
-                    px_r,
-                    px_g,
-                    px_b,
-                    px_timeout,
-                ) = click_config
-                pixel_check = {
-                    "position": (int(px_x), int(px_y)),
-                    "color": (int(px_r), int(px_g), int(px_b)),
-                    "timeout": float(px_timeout),
-                }
-                return int(x), int(y), float(sleep_time), pixel_check, "left"
+            parse_tuple = {
+                2: lambda t: (int(t[0]), int(t[1]), 0.0, None, "left"),
+                3: lambda t: (int(t[0]), int(t[1]), float(t[2]), None, "left"),
+                9: lambda t: (
+                    int(t[0]),
+                    int(t[1]),
+                    float(t[2]),
+                    {
+                        "position": (int(t[3]), int(t[4])),
+                        "color": (int(t[5]), int(t[6]), int(t[7])),
+                        "timeout": float(t[8]),
+                    },
+                    "left",
+                ),
+            }.get(len(click_config))
+            
+            if parse_tuple:
+                return parse_tuple(click_config)
 
         raise ValueError(click_config)
 
     def execute_mouse_clicks(self, click_sequence: Sequence[ClickConfig]) -> None:
+        click_func = lambda btn: pyautogui.rightClick if btn == "right" else pyautogui.click
+        
         for click_config in click_sequence:
             try:
-                x, y, sleep_time, pixel_check, button = self._parse_click_config(
-                    click_config
-                )
+                x, y, sleep_time, pixel_check, button = self._parse_click_config(click_config)
             except ValueError as e:
                 print(e)
                 continue
+            
             if pixel_check:
-                pixel_pos = pixel_check["position"]
-                pixel_color = pixel_check["color"]
-                pixel_timeout = float(pixel_check.get("timeout", 10.0))
-                if not self._pixel_service.wait_for_pixel_color(
-                    pixel_pos[0], pixel_pos[1], pixel_color, pixel_timeout
-                ):
-                    print(pixel_pos, pixel_color)
+                pos, color = pixel_check["position"], pixel_check["color"]
+                timeout = float(pixel_check.get("timeout", 10.0))
+                if not self._pixel_service.wait_for_pixel_color(pos[0], pos[1], color, timeout):
+                    print(pos, color)
 
-            if button == "right":
-                pyautogui.rightClick(x, y)
-            else:
-                pyautogui.click(x, y)
+            click_func(button)(x, y)
             
             if sleep_time > 0:
                 time.sleep(sleep_time)

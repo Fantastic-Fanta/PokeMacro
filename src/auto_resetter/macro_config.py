@@ -14,18 +14,16 @@ ClickTuple = Union[
 ClickConfig = Union[ClickDict, ClickTuple]
 
 
-@dataclass
+@dataclass(frozen=True)
 class RegionConfig:
-    """Configuration for screen region to capture."""
     x: int
     y: int
     width: int
     height: int
 
 
-@dataclass
+@dataclass(frozen=True)
 class PositionsConfig:
-    """Configuration for UI element positions."""
     egg_man_position: Tuple[int, int]
     event_button: Tuple[int, int]
     dialogue_yes: Tuple[int, int]
@@ -36,13 +34,9 @@ class PositionsConfig:
 
 
 def _load_config_from_yaml() -> Dict[str, Any]:
-    """Load configuration from YAML file."""
-    current_file = Path(__file__)
-    project_root = current_file.parent.parent.parent
-    config_path = project_root / "configs.yaml"
+    config_path = Path(__file__).parent.parent.parent / "configs.yaml"
     if not config_path.exists():
         return {}
-    
     try:
         with open(config_path, "r", encoding="utf-8") as f:
             return yaml.safe_load(f) or {}
@@ -52,19 +46,17 @@ def _load_config_from_yaml() -> Dict[str, Any]:
 
 
 _config = _load_config_from_yaml()
-
-# CONFIGS - Default values
-_constants = _config.get("Wishlist", {})
-RESKINS = _constants.get("Reskins", ["Whiteout", "Phantom", "Glitch"])
-GRADIENTS = _constants.get("Gradients", ["Chronos", "Helios", "Gaia", "Nereus", "Nyx", "Frostbite", "Winter"])
+_wishlist = _config.get("Wishlist", {})
+RESKINS = _wishlist.get("Reskins", ["Whiteout", "Phantom", "Glitch"])
+GRADIENTS = _wishlist.get("Gradients", ["Chronos", "Helios", "Gaia", "Nereus", "Nyx", "Frostbite", "Winter"])
 USERNAME = _config.get("Username", "Manta")
-
-# Matchers
+DISCORD_WEBHOOK = _config.get("DiscordWebhook", "")
 IS_RESKIN = _config.get("IsReskin", False)
 IS_SHINY = _config.get("IsShiny", False)
 IS_GRADIENT = _config.get("IsGradient", False)
 IS_ANY = _config.get("IsAny", True)
 IS_GOOD = _config.get("IsGood", False)
+
 
 @dataclass
 class MacroConfig:
@@ -82,42 +74,37 @@ class MacroConfig:
     initial_delay_seconds: float = 3.0
     post_click_delay_seconds: float = 1.0
     between_iterations_delay_seconds: float = 5.0
+    discord_webhook: str = DISCORD_WEBHOOK
     
-    def __post_init__(self):
-        if self.reskins is None:
-            self.reskins = RESKINS
-        if self.gradients is None:
-            self.gradients = GRADIENTS
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "reskins", self.reskins or RESKINS)
+        object.__setattr__(self, "gradients", self.gradients or GRADIENTS)
+
+
+def _to_tuple(value: Any) -> Tuple[int, int]:
+    if isinstance(value, (list, tuple)) and len(value) >= 2:
+        return (int(value[0]), int(value[1]))
+    raise ValueError(value)
 
 
 def _load_positions_from_yaml() -> PositionsConfig:
     positions_yaml = _config.get("Positions", {})
-    
-    def _to_tuple(value: Any) -> Tuple[int, int]:
-        if isinstance(value, (list, tuple)) and len(value) >= 2:
-            return (int(value[0]), int(value[1]))
-        raise ValueError(value)
-    
+    get_pos = lambda key, default: _to_tuple(positions_yaml.get(key, default))
     return PositionsConfig(
-        egg_man_position=_to_tuple(positions_yaml.get("EggManPosition", [675, 739])),
-        event_button=_to_tuple(positions_yaml.get("EventButton", [1418, 965])),
-        dialogue_yes=_to_tuple(positions_yaml.get("DialogueYES", [1170, 405])),
-        menu_button=_to_tuple(positions_yaml.get("MenuButton", [43, 451])),
-        quick_rejoin_sprite=_to_tuple(positions_yaml.get("QuickRejoinSprite", [1475, 850])),
-        quick_rejoin_button=_to_tuple(positions_yaml.get("QuickRejoinButton", [1000, 580])),
-        save_button=_to_tuple(positions_yaml.get("SaveButton", [70, 735])),
+        egg_man_position=get_pos("EggManPosition", [675, 739]),
+        event_button=get_pos("EventButton", [1418, 965]),
+        dialogue_yes=get_pos("DialogueYES", [1170, 405]),
+        menu_button=get_pos("MenuButton", [43, 451]),
+        quick_rejoin_sprite=get_pos("QuickRejoinSprite", [1475, 850]),
+        quick_rejoin_button=get_pos("QuickRejoinButton", [1000, 580]),
+        save_button=get_pos("SaveButton", [70, 735]),
     )
 
 
 def _load_region_from_yaml() -> RegionConfig:
     chat_window_yaml = _config.get("ChatWindow", {})
-    def _to_tuple(value: Any) -> Tuple[int, int]:
-        if isinstance(value, (list, tuple)) and len(value) >= 2:
-            return (int(value[0]), int(value[1]))
-        raise ValueError(f"Invalid corner value: {value}")
     left_corner = _to_tuple(chat_window_yaml.get("LeftCorner", [13, 136]))
     right_corner = _to_tuple(chat_window_yaml.get("RightCorner", [440, 354]))
-    
     return RegionConfig(
         x=left_corner[0],
         y=left_corner[1],
@@ -127,15 +114,9 @@ def _load_region_from_yaml() -> RegionConfig:
 
 
 def _get_screen_center() -> Tuple[int, int]:
-    screen_size = pyautogui.size()
-    return (screen_size.width // 2, screen_size.height // 2)
-
-
-def _get_chat_window_center(region: RegionConfig) -> Tuple[int, int]:
-    return (
-        region.x + region.width // 2,
-        region.y + region.height // 2,
-    )
+    size = pyautogui.size()
+    return (size.width // 2, size.height // 2)
+_get_chat_window_center = lambda region: (region.x + region.width // 2, region.y + region.height // 2)
 
 
 def _create_default_click_sequence(
@@ -143,31 +124,30 @@ def _create_default_click_sequence(
     screen_center: Tuple[int, int],
     chat_window_center: Tuple[int, int],
 ) -> Sequence[ClickConfig]:
-    # Only edit this sequence if clicks aren't being registered correctly, or for adapting this sequence for other static encounters
     return [
         {
             "position": screen_center,
             "sleep": 1.5,
             "wait_for_pixel": {
                 "position": (screen_center[0], screen_center[1] // 2),
-                "color": (249, 239, 146),  # Pokemon text filler - Yellow
+                "color": (249, 239, 146),
                 "timeout": 50.0,
             },
         },
         {
-            "position": screen_center,
-            "sleep": 1.1,
+            "position": (screen_center[0], screen_center[1] // 6),
+            "sleep": 0.2,
         },
         {
-            "position": (screen_center[0], screen_center[1] + 50),
+            "position": (screen_center[0], screen_center[1] // 6 + 20),
             "sleep": 0.1,
         },
         {
-            "position": screen_center,  # Pos of the green save loading card
+            "position": screen_center,
             "sleep": 1.5,
             "wait_for_pixel": {
                 "position": screen_center,
-                "color": (146, 252, 207),  # Normal mode save slot UI - Green
+                "color": (146, 252, 207),
                 "timeout": 50.0,
             },
         },
@@ -187,6 +167,7 @@ def _create_default_click_sequence(
         {
             "position": positions.egg_man_position,
             "sleep": 0.1,
+            "button": "right",
         },
         {
             "position": positions.egg_man_position,
@@ -212,9 +193,7 @@ DEFAULT_POSITIONS = _load_positions_from_yaml()
 DEFAULT_REGION = _load_region_from_yaml()
 SCREEN_CENTER = _get_screen_center()
 CHAT_WINDOW_CENTER = _get_chat_window_center(DEFAULT_REGION)
-DEFAULT_CLICK_SEQUENCE = _create_default_click_sequence(
-    DEFAULT_POSITIONS, SCREEN_CENTER, CHAT_WINDOW_CENTER
-)
+DEFAULT_CLICK_SEQUENCE = _create_default_click_sequence(DEFAULT_POSITIONS, SCREEN_CENTER, CHAT_WINDOW_CENTER)
 
 DEFAULT_MACRO_CONFIG = MacroConfig(
     region=DEFAULT_REGION,
@@ -228,6 +207,7 @@ DEFAULT_MACRO_CONFIG = MacroConfig(
     is_gradient=IS_GRADIENT,
     is_any=IS_ANY,
     is_good=IS_GOOD,
+    discord_webhook=DISCORD_WEBHOOK,
 )
 
 
