@@ -45,4 +45,4 @@ IsAny: False
 IsGood: False
 
 # Discord Webhook (leave empty to disable if not needed)
-DiscordWebhook: "https://discord.com/api/webhooks/1456914161589030983/WgL11zmylhlik2YiSaahf-b5wuF23xD8qxseWaSNV1T8WPO9tsBnAh1xDrbz6lf9Qgta"
+DiscordWebhook: ""
